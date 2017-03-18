@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Movie Information App</title>
+    <link rel="stylesheet" href="https://bootswatch.com/cyborg/bootstrap.min.css">
+
+</head>
+
+<body>
+    <div id="app">
+        <nav class="navbar navbar-default">
+            <div class="container">
+                <div class="navbar-header">
+                    <a href="#" class="navbar-brand">Movie Info App</a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="jumbotron">
+                <h3 class="text-center">Search For Any Movie</h3>
+                <form @submit.prevent="search">
+                    <input type="text" class="form-control" placeholder="Search Movie" v-model="movie_title">
+                    <br>
+                    <center><button type="submit" class="btn btn-default btn-lg">Search</button></center>
+                </form>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="alert alert-danger" role="alert" v-if="error">
+                <strong>Sorry!</strong> Movie not found.
+            </div>
+
+            <div v-if="success">
+                <div class="row">
+                    <div class="col-sm-6 col-md-4" v-for="movie in movies">
+                        <div class="thumbnail">
+                            <img :src="imdbImage(movie.Poster)" alt="...">
+                            <div class="caption">
+                                <h3 v-html="movie.Title"></h3>
+                                <p v-html="movie.Year"></p>
+                                <p><a :href="imdbLink(movie.imdbID)" class="btn btn-primary" role="button">View More</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/vue"></script>
+    <script src="https://cdn.jsdelivr.net/vue.resource/1.2.1/vue-resource.min.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                movie_title: null,
+                error: false,
+                success: false,
+                movies: []
+            },
+            methods: {
+                search: function () {
+                    var self = this
+                    if (self.movie_title === null) {
+                        self.error = true
+                        return 0
+                    }
+                    this.$http.get('http://www.omdbapi.com/?s=' + self.movie_title).then(function (response) {
+                        var output = response.data
+                        console.log(output)
+                        if (output.Response === 'False') {
+                            self.error = true
+                            self.success = false
+                        } else {
+                            self.error = false
+                            self.movies = []
+                            output.Search.forEach(function (movie) {
+                                self.movies.push(movie)
+                            })
+                            self.success = true
+                            console.log(self.movies)
+                        }
+                    }, function (error) {
+                        console.log(error)
+                    })
+
+                },
+                imdbLink: function (link) {
+                    return 'http://www.imdb.com/title/' + link
+                },
+                imdbImage: function (imgLink) {
+                    if (imgLink === 'N/A') {
+                        return 'http://vignette3.wikia.nocookie.net/hunterxhunter/images/6/6d/No_image.png/revision/latest?cb=20120417110152'
+                    } else {
+                        return imgLink
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
